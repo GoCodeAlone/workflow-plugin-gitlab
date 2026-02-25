@@ -1,0 +1,24 @@
+{
+    "name": "workflow-plugin-gitlab",
+    "version": "1.0.0",
+    "description": "GitLab integration plugin: webhook handling and GitLab CI pipeline management",
+    "author": "GoCodeAlone",
+    "license": "MIT",
+    "type": "external",
+    "tier": "community",
+    "minEngineVersion": "0.2.0",
+    "keywords": ["gitlab", "webhook", "git", "ci", "cd", "pipeline", "merge-request", "integration"],
+    "homepage": "https://github.com/GoCodeAlone/workflow-plugin-gitlab",
+    "repository": "https://github.com/GoCodeAlone/workflow-plugin-gitlab",
+    "capabilities": {
+        "configProvider": false,
+        "moduleTypes": ["git.webhook"],
+        "stepTypes": [
+            "step.gitlab_trigger_pipeline",
+            "step.gitlab_pipeline_status",
+            "step.gitlab_create_merge_request",
+            "step.gitlab_mr_comment"
+        ],
+        "triggerTypes": []
+    }
+}
