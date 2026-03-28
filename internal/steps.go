@@ -83,6 +83,7 @@ func (s *triggerPipelineStep) Execute(
 	_ map[string]map[string]any,
 	_ map[string]any,
 	_ map[string]any,
+	_ map[string]any,
 ) (*sdk.StepResult, error) {
 	pipeline, err := s.client.TriggerPipeline(ctx, s.config.Project, s.config.Ref, s.config.Variables, s.config.Token)
 	if err != nil {
@@ -176,6 +177,7 @@ func (s *pipelineStatusStep) Execute(
 	ctx context.Context,
 	_ map[string]any,
 	_ map[string]map[string]any,
+	_ map[string]any,
 	_ map[string]any,
 	_ map[string]any,
 ) (*sdk.StepResult, error) {
@@ -275,6 +277,7 @@ func (s *createMRStep) Execute(
 	ctx context.Context,
 	_ map[string]any,
 	_ map[string]map[string]any,
+	_ map[string]any,
 	_ map[string]any,
 	_ map[string]any,
 ) (*sdk.StepResult, error) {
@@ -385,6 +388,7 @@ func (s *mrCommentStep) Execute(
 	_ map[string]map[string]any,
 	_ map[string]any,
 	_ map[string]any,
+	_ map[string]any,
 ) (*sdk.StepResult, error) {
 	if err := s.client.CommentOnMR(ctx, s.config.Project, s.config.MrIID, s.config.Body, s.config.Token); err != nil {
 		return gitlabErrorResult(fmt.Sprintf("failed to comment on MR: %v", err)), nil
@@ -407,4 +411,63 @@ func gitlabErrorResult(msg string) *sdk.StepResult {
 			"error": msg,
 		},
 	}
+}
+
+// ---- step.gitlab_parse_webhook ----
+
+// parseWebhookStep parses a raw GitLab webhook payload from the current context.
+//
+//	config:
+//	  source: "body"   # where to find the raw payload (default: body)
+type parseWebhookStep struct {
+	name   string
+	source string
+}
+
+func newParseWebhookStep(name string, config map[string]any) (*parseWebhookStep, error) {
+	source, _ := config["source"].(string)
+	if source == "" {
+		source = "body"
+	}
+	return &parseWebhookStep{name: name, source: source}, nil
+}
+
+func (s *parseWebhookStep) Execute(
+	_ context.Context,
+	triggerData map[string]any,
+	_ map[string]map[string]any,
+	current map[string]any,
+	_ map[string]any,
+	_ map[string]any,
+) (*sdk.StepResult, error) {
+	var raw map[string]any
+	switch s.source {
+	case "body":
+		if b, ok := triggerData["body"].(map[string]any); ok {
+			raw = b
+		} else if b, ok := current["body"].(map[string]any); ok {
+			raw = b
+		}
+	default:
+		if b, ok := triggerData[s.source].(map[string]any); ok {
+			raw = b
+		}
+	}
+
+	if raw == nil {
+		return &sdk.StepResult{Output: map[string]any{"parsed": false, "error": "no payload found"}}, nil
+	}
+
+	eventType, _ := triggerData["event_type"].(string)
+	if eventType == "" {
+		eventType, _ = current["event_type"].(string)
+	}
+
+	return &sdk.StepResult{
+		Output: map[string]any{
+			"parsed":     true,
+			"event_type": eventType,
+			"payload":    raw,
+		},
+	}, nil
 }

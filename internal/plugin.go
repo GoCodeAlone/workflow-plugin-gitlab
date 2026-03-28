@@ -28,14 +28,20 @@ func (p *gitlabPlugin) Manifest() sdk.PluginManifest {
 
 // ModuleTypes returns the module type names this plugin provides.
 func (p *gitlabPlugin) ModuleTypes() []string {
-	return []string{"git.webhook"}
+	return []string{
+		"git.webhook",
+		"gitlab.webhook",
+		"gitlab.client",
+	}
 }
 
 // CreateModule creates a module instance of the given type.
 func (p *gitlabPlugin) CreateModule(typeName, name string, config map[string]any) (sdk.ModuleInstance, error) {
 	switch typeName {
-	case "git.webhook":
+	case "git.webhook", "gitlab.webhook":
 		return newWebhookModule(name, config)
+	case "gitlab.client":
+		return newClientModule(name, config)
 	default:
 		return nil, fmt.Errorf("gitlab plugin: unknown module type %q", typeName)
 	}
@@ -47,7 +53,9 @@ func (p *gitlabPlugin) StepTypes() []string {
 		"step.gitlab_trigger_pipeline",
 		"step.gitlab_pipeline_status",
 		"step.gitlab_create_merge_request",
+		"step.gitlab_create_mr",
 		"step.gitlab_mr_comment",
+		"step.gitlab_parse_webhook",
 	}
 }
 
@@ -58,10 +66,12 @@ func (p *gitlabPlugin) CreateStep(typeName, name string, config map[string]any) 
 		return newTriggerPipelineStep(name, config, nil)
 	case "step.gitlab_pipeline_status":
 		return newPipelineStatusStep(name, config, nil)
-	case "step.gitlab_create_merge_request":
+	case "step.gitlab_create_merge_request", "step.gitlab_create_mr":
 		return newCreateMRStep(name, config, nil)
 	case "step.gitlab_mr_comment":
 		return newMRCommentStep(name, config, nil)
+	case "step.gitlab_parse_webhook":
+		return newParseWebhookStep(name, config)
 	default:
 		return nil, fmt.Errorf("gitlab plugin: unknown step type %q", typeName)
 	}
