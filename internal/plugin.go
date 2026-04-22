@@ -8,6 +8,12 @@ import (
 	sdk "github.com/GoCodeAlone/workflow/plugin/external/sdk"
 )
 
+// Version is set at build time via -ldflags
+// "-X github.com/GoCodeAlone/workflow-plugin-gitlab/internal.Version=X.Y.Z".
+// Default is a bare semver so plugin loaders that validate semver accept
+// unreleased dev builds; goreleaser overrides with the real release tag.
+var Version = "0.0.0"
+
 // gitlabPlugin implements sdk.PluginProvider, sdk.ModuleProvider, and sdk.StepProvider.
 type gitlabPlugin struct{}
 
@@ -20,7 +26,7 @@ func NewGitLabPlugin() sdk.PluginProvider {
 func (p *gitlabPlugin) Manifest() sdk.PluginManifest {
 	return sdk.PluginManifest{
 		Name:        "workflow-plugin-gitlab",
-		Version:     "1.0.0",
+		Version:     Version,
 		Author:      "GoCodeAlone",
 		Description: "GitLab integration plugin: webhook handling and GitLab CI pipeline management",
 	}
