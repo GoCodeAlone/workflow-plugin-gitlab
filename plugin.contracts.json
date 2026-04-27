@@ -1,0 +1,103 @@
+{
+  "version": "v1",
+  "contracts": [
+    {
+      "kind": "module",
+      "type": "git.webhook",
+      "mode": "strict",
+      "config": "workflow.plugins.gitlab.v1.WebhookConfig"
+    },
+    {
+      "kind": "module",
+      "type": "gitlab.webhook",
+      "mode": "strict",
+      "config": "workflow.plugins.gitlab.v1.WebhookConfig"
+    },
+    {
+      "kind": "module",
+      "type": "gitlab.client",
+      "mode": "strict",
+      "config": "workflow.plugins.gitlab.v1.GitLabClientConfig"
+    },
+    {
+      "kind": "step",
+      "type": "step.gitlab_trigger_pipeline",
+      "mode": "strict",
+      "config": "workflow.plugins.gitlab.v1.TriggerPipelineConfig",
+      "input": "workflow.plugins.gitlab.v1.TriggerPipelineInput",
+      "output": "workflow.plugins.gitlab.v1.PipelineOutput"
+    },
+    {
+      "kind": "step",
+      "type": "step.gitlab_pipeline_status",
+      "mode": "strict",
+      "config": "workflow.plugins.gitlab.v1.PipelineStatusConfig",
+      "input": "workflow.plugins.gitlab.v1.PipelineStatusInput",
+      "output": "workflow.plugins.gitlab.v1.PipelineOutput"
+    },
+    {
+      "kind": "step",
+      "type": "step.gitlab_create_merge_request",
+      "mode": "strict",
+      "config": "workflow.plugins.gitlab.v1.CreateMergeRequestConfig",
+      "input": "workflow.plugins.gitlab.v1.CreateMergeRequestInput",
+      "output": "workflow.plugins.gitlab.v1.MergeRequestOutput"
+    },
+    {
+      "kind": "step",
+      "type": "step.gitlab_create_mr",
+      "mode": "strict",
+      "config": "workflow.plugins.gitlab.v1.CreateMergeRequestConfig",
+      "input": "workflow.plugins.gitlab.v1.CreateMergeRequestInput",
+      "output": "workflow.plugins.gitlab.v1.MergeRequestOutput"
+    },
+    {
+      "kind": "step",
+      "type": "step.gitlab_mr_comment",
+      "mode": "strict",
+      "config": "workflow.plugins.gitlab.v1.MRCommentConfig",
+      "input": "workflow.plugins.gitlab.v1.MRCommentInput",
+      "output": "workflow.plugins.gitlab.v1.MRCommentOutput"
+    },
+    {
+      "kind": "step",
+      "type": "step.gitlab_parse_webhook",
+      "mode": "strict",
+      "config": "workflow.plugins.gitlab.v1.ParseWebhookConfig",
+      "input": "workflow.plugins.gitlab.v1.ParseWebhookInput",
+      "output": "workflow.plugins.gitlab.v1.ParseWebhookOutput"
+    },
+    {
+      "kind": "service_method",
+      "serviceName": "gitlab.client",
+      "method": "trigger_pipeline",
+      "mode": "strict",
+      "input": "workflow.plugins.gitlab.v1.TriggerPipelineInput",
+      "output": "workflow.plugins.gitlab.v1.PipelineOutput"
+    },
+    {
+      "kind": "service_method",
+      "serviceName": "gitlab.client",
+      "method": "pipeline_status",
+      "mode": "strict",
+      "input": "workflow.plugins.gitlab.v1.PipelineStatusInput",
+      "output": "workflow.plugins.gitlab.v1.PipelineOutput"
+    },
+    {
+      "kind": "service_method",
+      "serviceName": "gitlab.client",
+      "method": "create_merge_request",
+      "mode": "strict",
+      "input": "workflow.plugins.gitlab.v1.CreateMergeRequestInput",
+      "output": "workflow.plugins.gitlab.v1.MergeRequestOutput"
+    },
+    {
+      "kind": "service_method",
+      "serviceName": "gitlab.client",
+      "method": "mr_comment",
+      "mode": "strict",
+      "input": "workflow.plugins.gitlab.v1.MRCommentInput",
+      "output": "workflow.plugins.gitlab.v1.MRCommentOutput"
+    }
+  ]
+}

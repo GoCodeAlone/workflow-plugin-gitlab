@@ -15,7 +15,7 @@ func TestTriggerPipelineStep_Mock(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	result, err := step.Execute(context.Background(), nil, nil, nil, nil)
+	result, err := step.Execute(context.Background(), nil, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -55,7 +55,7 @@ func TestPipelineStatusStep_Mock(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	result, err := step.Execute(context.Background(), nil, nil, nil, nil)
+	result, err := step.Execute(context.Background(), nil, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -97,7 +97,7 @@ func TestCreateMRStep_Mock(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	result, err := step.Execute(context.Background(), nil, nil, nil, nil)
+	result, err := step.Execute(context.Background(), nil, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestMRCommentStep_Mock(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	result, err := step.Execute(context.Background(), nil, nil, nil, nil)
+	result, err := step.Execute(context.Background(), nil, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
