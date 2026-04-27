@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package workflow.plugins.gitlab.v1;
+
+import "google/protobuf/struct.proto";
+
+option go_package = "github.com/GoCodeAlone/workflow-plugin-gitlab/internal/contracts;contracts";
+
+message WebhookConfig {
+  string provider = 1;
+  string secret = 2;
+  string path = 3;
+  repeated string events = 4;
+  string topic = 5;
+}
+
+message GitLabClientConfig {
+  string url = 1;
+  string token = 2;
+}
+
+message TriggerPipelineConfig {
+  string project = 1;
+  string ref = 2;
+  string token = 3;
+  string url = 4;
+  map<string, string> variables = 5;
+}
+
+message TriggerPipelineInput {
+  string project = 1;
+  string ref = 2;
+  string token = 3;
+  map<string, string> variables = 4;
+}
+
+message PipelineStatusConfig {
+  string project = 1;
+  int32 pipeline_id = 2;
+  string token = 3;
+  string url = 4;
+}
+
+message PipelineStatusInput {
+  string project = 1;
+  int32 pipeline_id = 2;
+  string token = 3;
+}
+
+message CreateMergeRequestConfig {
+  string project = 1;
+  string source_branch = 2;
+  string target_branch = 3;
+  string title = 4;
+  string description = 5;
+  string token = 6;
+  string url = 7;
+}
+
+message CreateMergeRequestInput {
+  string project = 1;
+  string source_branch = 2;
+  string target_branch = 3;
+  string title = 4;
+  string description = 5;
+  string token = 6;
+}
+
+message MRCommentConfig {
+  string project = 1;
+  int32 mr_iid = 2;
+  string body = 3;
+  string token = 4;
+  string url = 5;
+}
+
+message MRCommentInput {
+  string project = 1;
+  int32 mr_iid = 2;
+  string body = 3;
+  string token = 4;
+}
+
+message ParseWebhookConfig {
+  string source = 1;
+}
+
+message ParseWebhookInput {
+  string event_type = 1;
+  google.protobuf.Struct body = 2;
+  map<string, google.protobuf.Value> fields = 3;
+}
+
+message PipelineOutput {
+  int32 pipeline_id = 1;
+  string status = 2;
+  string ref = 3;
+  string sha = 4;
+  string web_url = 5;
+  string created_at = 6;
+  string error = 100;
+}
+
+message MergeRequestOutput {
+  int32 mr_id = 1;
+  int32 mr_iid = 2;
+  string title = 3;
+  string state = 4;
+  string source_branch = 5;
+  string target_branch = 6;
+  string web_url = 7;
+  string error = 100;
+}
+
+message MRCommentOutput {
+  bool commented = 1;
+  string project = 2;
+  int32 mr_iid = 3;
+  string error = 100;
+}
+
+message ParseWebhookOutput {
+  bool parsed = 1;
+  string event_type = 2;
+  google.protobuf.Struct payload = 3;
+  string error = 100;
+}
