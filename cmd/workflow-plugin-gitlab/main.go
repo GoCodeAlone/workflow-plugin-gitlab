@@ -10,5 +10,5 @@ import (
 )
 
 func main() {
-	sdk.Serve(internal.NewGitLabPlugin())
+	sdk.Serve(internal.NewGitLabPlugin(), sdk.WithBuildVersion(sdk.ResolveBuildVersion(internal.Version)))
 }
