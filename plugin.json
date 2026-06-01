@@ -1,6 +1,6 @@
 {
     "name": "workflow-plugin-gitlab",
-    "version": "1.0.2",
+    "version": "0.0.0",
     "description": "GitLab integration plugin: webhook handling and GitLab CI pipeline management",
     "author": "GoCodeAlone",
     "license": "MIT",
