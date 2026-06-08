@@ -56,9 +56,9 @@ func parseGitLabSecretSetConfig(raw map[string]any) (gitLabSecretSetConfig, erro
 	cfg.Value = os.ExpandEnv(strVal(raw, "value"))
 	cfg.Description = strVal(raw, "description")
 	cfg.EnvironmentScope = strVal(raw, "environment_scope")
-	cfg.Masked = boolConfigVal(raw, "masked", true)
+	cfg.Masked = boolConfigVal(raw, "masked", false)
 	cfg.Protected = boolConfigVal(raw, "protected", false)
-	cfg.Raw = boolConfigVal(raw, "raw", true)
+	cfg.Raw = boolConfigVal(raw, "raw", false)
 	cfg.Token = os.ExpandEnv(strVal(raw, "token"))
 	cfg.URL = strVal(raw, "url")
 	if err := (gitLabVariableOptions{
@@ -134,7 +134,10 @@ func parseGitLabSecretListConfig(raw map[string]any) (gitLabSecretListConfig, er
 	cfg.EnvironmentScope = strVal(raw, "environment_scope")
 	cfg.Token = os.ExpandEnv(strVal(raw, "token"))
 	cfg.URL = strVal(raw, "url")
-	return cfg, (gitLabVariableOptions{Scope: cfg.Scope, Project: cfg.Project, Group: cfg.Group, Key: "DUMMY"}).validateVariable()
+	if err := validateGitLabVariableListConfig(cfg.Scope, cfg.Project, cfg.Group); err != nil {
+		return cfg, err
+	}
+	return cfg, nil
 }
 
 func (s *gitLabSecretListStep) Execute(ctx context.Context, _ map[string]any, _ map[string]map[string]any, _ map[string]any, _ map[string]any, _ map[string]any) (*sdk.StepResult, error) {
@@ -306,4 +309,20 @@ func boolConfigVal(raw map[string]any, key string, fallback bool) bool {
 		}
 	}
 	return fallback
+}
+
+func validateGitLabVariableListConfig(scope gitLabSecretScope, project, group string) error {
+	switch scope {
+	case "", gitLabSecretScopeProject:
+		if strings.TrimSpace(project) == "" {
+			return fmt.Errorf("config.project is required")
+		}
+	case gitLabSecretScopeGroup:
+		if strings.TrimSpace(group) == "" {
+			return fmt.Errorf("config.group is required")
+		}
+	default:
+		return fmt.Errorf("unsupported gitlab variable scope %q", scope)
+	}
+	return nil
 }

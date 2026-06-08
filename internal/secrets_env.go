@@ -72,8 +72,9 @@ func newSDKGitLabSecretsEnvironmentAPI(token, baseURL string) (gitLabSecretsEnvi
 	if token == "" {
 		return nil, errors.New("gitlab token is required")
 	}
+	baseURL = strings.TrimSpace(baseURL)
 	opts := []gitlab.ClientOptionFunc{}
-	if strings.TrimSpace(baseURL) != "" {
+	if baseURL != "" {
 		opts = append(opts, gitlab.WithBaseURL(baseURL))
 	}
 	client, err := gitlab.NewClient(token, opts...)
@@ -269,7 +270,8 @@ func (opts gitLabVariableOptions) validateVariable() error {
 }
 
 func variableFilter(environmentScope string) *gitlab.VariableFilter {
-	if strings.TrimSpace(environmentScope) == "" {
+	environmentScope = strings.TrimSpace(environmentScope)
+	if environmentScope == "" {
 		return nil
 	}
 	return &gitlab.VariableFilter{EnvironmentScope: environmentScope}
