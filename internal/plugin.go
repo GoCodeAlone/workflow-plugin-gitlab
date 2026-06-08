@@ -91,12 +91,23 @@ func (p *gitlabPlugin) StepTypes() []string {
 		"step.gitlab_create_mr",
 		"step.gitlab_mr_comment",
 		"step.gitlab_parse_webhook",
+		"step.gitlab_secret_set",
+		"step.gitlab_secret_list",
+		"step.gitlab_environment_ensure",
+		"step.gitlab_environment_list",
 	}
 }
 
 // TypedStepTypes returns the protobuf-typed step type names this plugin provides.
 func (p *gitlabPlugin) TypedStepTypes() []string {
-	return p.StepTypes()
+	return []string{
+		"step.gitlab_trigger_pipeline",
+		"step.gitlab_pipeline_status",
+		"step.gitlab_create_merge_request",
+		"step.gitlab_create_mr",
+		"step.gitlab_mr_comment",
+		"step.gitlab_parse_webhook",
+	}
 }
 
 // CreateStep creates a step instance of the given type.
@@ -112,6 +123,14 @@ func (p *gitlabPlugin) CreateStep(typeName, name string, config map[string]any) 
 		return newMRCommentStep(name, config, nil)
 	case "step.gitlab_parse_webhook":
 		return newParseWebhookStep(name, config)
+	case "step.gitlab_secret_set":
+		return newGitLabSecretSetStep(name, config, nil)
+	case "step.gitlab_secret_list":
+		return newGitLabSecretListStep(name, config, nil)
+	case "step.gitlab_environment_ensure":
+		return newGitLabEnvironmentEnsureStep(name, config, nil)
+	case "step.gitlab_environment_list":
+		return newGitLabEnvironmentListStep(name, config, nil)
 	default:
 		return nil, fmt.Errorf("gitlab plugin: unknown step type %q", typeName)
 	}
