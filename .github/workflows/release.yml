@@ -23,18 +23,18 @@ jobs:
 
       - name: Configure Go private modules
         run: git config --global url."https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      - name: Install wfctl v0.74.6
+      - name: Install wfctl v0.78.0
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WFCTL_VERSION: v0.74.6
+          WFCTL_VERSION: v0.78.0
         run: |
           set -euo pipefail
           runner_arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
           asset="wfctl-linux-${runner_arch}"
           download_dir="$(mktemp -d)"
           case "${asset}" in
-            wfctl-linux-amd64) expected_sha="e471470fbf82bcf9bb11de338b727b0c38b426c955f1740e0d6e88eca604436a" ;;
-            wfctl-linux-arm64) expected_sha="bf4525f2769d52336d9634a8d22baa8af3a981ed6be8a4a213c1aa8a4cf2c688" ;;
+            wfctl-linux-amd64) expected_sha="63ac0957274e702930045c9c49955ab2a80b2ee9660da04d4fb4a45c8217f7d2" ;;
+            wfctl-linux-arm64) expected_sha="47a7d380837e404e00930b2a4bc504d583bf606520bc58c29dc984d21e704929" ;;
             *) echo "::error::unsupported wfctl asset ${asset}"; exit 1 ;;
           esac
           gh release download "${WFCTL_VERSION}" \
@@ -74,7 +74,8 @@ jobs:
           fi
           "wfctl" plugin verify-capabilities --binary "$BIN" .
       - name: Verify shipped plugin.json carries tag (post-build)
-        run: '"wfctl" plugin validate-contract --for-publish --tag ${{ github.ref_name }} --release-dir . .'
+        run: |
+          wfctl plugin validate-contract --for-publish --tag "${{ github.ref_name }}" --release-dir dist .
       - name: Publish GitHub release
         if: ${{ success() }}
         env:
