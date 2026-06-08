@@ -10,6 +10,46 @@
     "keywords": ["gitlab", "webhook", "git", "ci", "cd", "pipeline", "merge-request", "integration"],
     "homepage": "https://github.com/GoCodeAlone/workflow-plugin-gitlab",
     "repository": "https://github.com/GoCodeAlone/workflow-plugin-gitlab",
+    "required_secrets": [
+        {
+            "name": "GITLAB_TOKEN",
+            "sensitive": true,
+            "description": "GitLab personal, project, or group access token with API permissions for pipeline, merge-request, CI/CD variable, and environment management operations.",
+            "prompt": "GitLab API token"
+        }
+    ],
+    "secret_targets": [
+        {
+            "provider": "gitlab",
+            "scopes": ["project", "group", "env"],
+            "description": "GitLab CI/CD variables at project, group, and environment scope."
+        },
+        {
+            "provider": "github",
+            "scopes": ["repo", "env", "org"],
+            "description": "GitLab token stored as GitHub Actions secrets when workflows run on GitHub."
+        },
+        {
+            "provider": "vault",
+            "scopes": ["mount"],
+            "description": "GitLab token stored in Vault for application/runtime retrieval."
+        },
+        {
+            "provider": "file",
+            "scopes": ["directory"],
+            "description": "GitLab token stored in a local file-backed secret store."
+        },
+        {
+            "provider": "keychain",
+            "scopes": ["service"],
+            "description": "GitLab token stored in the local OS keychain."
+        },
+        {
+            "provider": "env",
+            "scopes": ["process"],
+            "description": "GitLab token provided by the local process environment."
+        }
+    ],
     "downloads": [
         {
             "os": "linux",
@@ -51,7 +91,11 @@
             "step.gitlab_create_merge_request",
             "step.gitlab_create_mr",
             "step.gitlab_mr_comment",
-            "step.gitlab_parse_webhook"
+            "step.gitlab_parse_webhook",
+            "step.gitlab_secret_set",
+            "step.gitlab_secret_list",
+            "step.gitlab_environment_ensure",
+            "step.gitlab_environment_list"
         ],
         "serviceMethods": [
             "gitlab.client/trigger_pipeline",
