@@ -46,6 +46,9 @@ modules:
       secret: ${GITLAB_WEBHOOK_SECRET}
 ```
 
+The plugin also accepts `git.webhook` as a compatibility alias for
+`gitlab.webhook`.
+
 ## Pipeline and Merge Request Steps
 
 ```yaml
@@ -75,12 +78,14 @@ GitLab secrets are GitLab CI/CD variables. `step.gitlab_secret_set` creates or
 updates a variable, and `step.gitlab_secret_list` reports variables visible at
 the selected scope.
 
-Supported scopes:
+Supported variable locations:
 
 - `project`: set or list variables on one GitLab project.
 - `group`: set or list variables on one GitLab group.
-- `environment_scope`: optional GitLab variable filter, such as `production`
-  or `review/*`. This is a GitLab field, not a local `.env` scope.
+
+GitLab's `environment_scope` is a separate optional variable field, not a
+`scope` value. Use it to narrow project or group variables to an environment
+pattern such as `production` or `review/*`. It is not a local `.env` scope.
 
 ```yaml
 steps:
