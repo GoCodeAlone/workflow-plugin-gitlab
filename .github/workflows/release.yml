@@ -100,4 +100,4 @@ jobs:
           repository: GoCodeAlone/workflow-registry
           event-type: plugin-release
           client-payload: |-
-            {"plugin": "gitlab", "tag": "${{ github.ref_name }}"}
+            {"plugin": "workflow-plugin-gitlab", "tag": "${{ github.ref_name }}"}
