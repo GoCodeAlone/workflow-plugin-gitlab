@@ -21,8 +21,8 @@
     "secret_targets": [
         {
             "provider": "gitlab",
-            "scopes": ["project", "group", "env"],
-            "description": "GitLab CI/CD variables at project, group, and environment scope."
+            "scopes": ["project", "group", "environment_scope"],
+            "description": "GitLab CI/CD variables at project or group scope, optionally narrowed with GitLab's environment_scope field."
         },
         {
             "provider": "github",

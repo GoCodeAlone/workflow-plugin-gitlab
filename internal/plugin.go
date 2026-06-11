@@ -1,5 +1,3 @@
-// Package internal implements the workflow-plugin-gitlab external plugin,
-// providing GitLab webhook handling and GitLab CI pipeline management.
 package internal
 
 import (
