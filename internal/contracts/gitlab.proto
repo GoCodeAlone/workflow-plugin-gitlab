@@ -25,6 +25,7 @@ message TriggerPipelineConfig {
   string token = 3;
   string url = 4;
   map<string, string> variables = 5;
+  string client = 6;
 }
 
 message TriggerPipelineInput {
@@ -39,6 +40,7 @@ message PipelineStatusConfig {
   int32 pipeline_id = 2;
   string token = 3;
   string url = 4;
+  string client = 5;
 }
 
 message PipelineStatusInput {
@@ -55,6 +57,7 @@ message CreateMergeRequestConfig {
   string description = 5;
   string token = 6;
   string url = 7;
+  string client = 8;
 }
 
 message CreateMergeRequestInput {
@@ -72,6 +75,7 @@ message MRCommentConfig {
   string body = 3;
   string token = 4;
   string url = 5;
+  string client = 6;
 }
 
 message MRCommentInput {
