@@ -181,6 +181,86 @@ func TestTypedClientServicePipelineStatus(t *testing.T) {
 	}
 }
 
+func TestLegacyStepResolvesNamedClientModule(t *testing.T) {
+	provider := NewGitLabPlugin()
+	moduleProvider := provider.(sdk.ModuleProvider)
+	stepProvider := provider.(sdk.StepProvider)
+
+	if _, err := moduleProvider.CreateModule("gitlab.client", "gitlab-client", map[string]any{
+		"token": "mock",
+	}); err != nil {
+		t.Fatalf("CreateModule: %v", err)
+	}
+
+	step, err := stepProvider.CreateStep("step.gitlab_trigger_pipeline", "trigger", map[string]any{
+		"client":  "gitlab-client",
+		"project": "group/project",
+		"ref":     "main",
+	})
+	if err != nil {
+		t.Fatalf("CreateStep: %v", err)
+	}
+	trigger, ok := step.(*triggerPipelineStep)
+	if !ok {
+		t.Fatalf("step type = %T, want *triggerPipelineStep", step)
+	}
+	if _, ok := trigger.client.(*mockGitLabClient); !ok {
+		t.Fatalf("client type = %T, want *mockGitLabClient", trigger.client)
+	}
+
+	result, err := trigger.Execute(context.Background(), nil, nil, nil, nil, nil)
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if result.Output["pipeline_id"] != 42 {
+		t.Fatalf("pipeline_id = %v, want 42", result.Output["pipeline_id"])
+	}
+}
+
+func TestTypedStepResolvesNamedClientModule(t *testing.T) {
+	provider := NewGitLabPlugin().(*gitlabPlugin)
+	var moduleProvider sdk.TypedModuleProvider = provider
+	var stepProvider sdk.TypedStepProvider = provider
+
+	moduleConfig, err := anypb.New(&contracts.GitLabClientConfig{Token: "mock"})
+	if err != nil {
+		t.Fatalf("pack module config: %v", err)
+	}
+	if _, err := moduleProvider.CreateTypedModule("gitlab.client", "gitlab-client", moduleConfig); err != nil {
+		t.Fatalf("CreateTypedModule: %v", err)
+	}
+
+	stepConfig, err := anypb.New(&contracts.TriggerPipelineConfig{
+		Client:  "gitlab-client",
+		Project: "group/project",
+		Ref:     "main",
+	})
+	if err != nil {
+		t.Fatalf("pack step config: %v", err)
+	}
+	if _, err := stepProvider.CreateTypedStep("step.gitlab_trigger_pipeline", "trigger", stepConfig); err != nil {
+		t.Fatalf("CreateTypedStep: %v", err)
+	}
+	client, err := provider.clientFromTypedConfig(stepConfig)
+	if err != nil {
+		t.Fatalf("clientFromTypedConfig: %v", err)
+	}
+	result, err := typedTriggerPipeline(client)(context.Background(), sdk.TypedStepRequest[*contracts.TriggerPipelineConfig, *contracts.TriggerPipelineInput]{
+		Config: &contracts.TriggerPipelineConfig{
+			Client:  "gitlab-client",
+			Project: "group/project",
+			Ref:     "main",
+		},
+		Input: &contracts.TriggerPipelineInput{},
+	})
+	if err != nil {
+		t.Fatalf("typedTriggerPipeline: %v", err)
+	}
+	if result.Output.GetPipelineId() != 42 {
+		t.Fatalf("pipeline_id = %d, want 42", result.Output.GetPipelineId())
+	}
+}
+
 type manifestContract struct {
 	Mode          string `json:"mode"`
 	ConfigMessage string `json:"config"`

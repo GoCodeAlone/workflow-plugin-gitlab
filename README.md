@@ -22,7 +22,8 @@ SDK. Configure `url` only for GitLab self-managed installations; omit it for
 ### `gitlab.client`
 
 Declares reusable GitLab API connection settings for service-style calls. Steps
-can also provide `token` and `url` directly.
+can reference the module with `client: <module name>`, or provide `token` and
+`url` directly when a reusable module is unnecessary.
 
 ```yaml
 modules:
@@ -56,20 +57,20 @@ steps:
   - name: trigger-build
     type: step.gitlab_trigger_pipeline
     config:
+      client: gitlab
       project: group/project
       ref: main
-      token: ${GITLAB_TOKEN}
       variables:
         DEPLOY_ENV: staging
 
   - name: open-mr
     type: step.gitlab_create_merge_request
     config:
+      client: gitlab
       project: group/project
       source_branch: feature/docs
       target_branch: main
       title: "docs: refresh generated API reference"
-      token: ${GITLAB_TOKEN}
 ```
 
 ## GitLab CI/CD Variables

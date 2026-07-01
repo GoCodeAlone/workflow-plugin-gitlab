@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/GoCodeAlone/workflow-plugin-gitlab/internal/contracts"
 	pb "github.com/GoCodeAlone/workflow/plugin/external/proto"
@@ -19,11 +20,14 @@ import (
 var Version = "0.0.0"
 
 // gitlabPlugin implements sdk.PluginProvider, sdk.ModuleProvider, and sdk.StepProvider.
-type gitlabPlugin struct{}
+type gitlabPlugin struct {
+	mu      sync.RWMutex
+	clients map[string]*gitlabClientModule
+}
 
 // NewGitLabPlugin returns a new gitlabPlugin instance.
 func NewGitLabPlugin() sdk.PluginProvider {
-	return &gitlabPlugin{}
+	return &gitlabPlugin{clients: map[string]*gitlabClientModule{}}
 }
 
 // Manifest returns plugin metadata.
@@ -56,7 +60,12 @@ func (p *gitlabPlugin) CreateModule(typeName, name string, config map[string]any
 	case "git.webhook", "gitlab.webhook":
 		return newWebhookModule(name, config)
 	case "gitlab.client":
-		return newClientModule(name, config)
+		module, err := newClientModule(name, config)
+		if err != nil {
+			return nil, err
+		}
+		p.registerClient(module)
+		return module, nil
 	default:
 		return nil, fmt.Errorf("gitlab plugin: unknown module type %q", typeName)
 	}
@@ -72,7 +81,12 @@ func (p *gitlabPlugin) CreateTypedModule(typeName, name string, config *anypb.An
 		return factory.CreateTypedModule(typeName, name, config)
 	case "gitlab.client":
 		factory := sdk.NewTypedModuleFactory("gitlab.client", &contracts.GitLabClientConfig{}, func(name string, cfg *contracts.GitLabClientConfig) (sdk.ModuleInstance, error) {
-			return newClientModule(name, protoMessageToMap(cfg))
+			module, err := newClientModule(name, protoMessageToMap(cfg))
+			if err != nil {
+				return nil, err
+			}
+			p.registerClient(module)
+			return module, nil
 		})
 		return factory.CreateTypedModule(typeName, name, config)
 	default:
@@ -112,13 +126,29 @@ func (p *gitlabPlugin) TypedStepTypes() []string {
 func (p *gitlabPlugin) CreateStep(typeName, name string, config map[string]any) (sdk.StepInstance, error) {
 	switch typeName {
 	case "step.gitlab_trigger_pipeline":
-		return newTriggerPipelineStep(name, config, nil)
+		client, err := p.clientFromConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		return newTriggerPipelineStep(name, config, client)
 	case "step.gitlab_pipeline_status":
-		return newPipelineStatusStep(name, config, nil)
+		client, err := p.clientFromConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		return newPipelineStatusStep(name, config, client)
 	case "step.gitlab_create_merge_request", "step.gitlab_create_mr":
-		return newCreateMRStep(name, config, nil)
+		client, err := p.clientFromConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		return newCreateMRStep(name, config, client)
 	case "step.gitlab_mr_comment":
-		return newMRCommentStep(name, config, nil)
+		client, err := p.clientFromConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		return newMRCommentStep(name, config, client)
 	case "step.gitlab_parse_webhook":
 		return newParseWebhookStep(name, config)
 	case "step.gitlab_secret_set":
@@ -138,16 +168,32 @@ func (p *gitlabPlugin) CreateStep(typeName, name string, config map[string]any) 
 func (p *gitlabPlugin) CreateTypedStep(typeName, name string, config *anypb.Any) (sdk.StepInstance, error) {
 	switch typeName {
 	case "step.gitlab_trigger_pipeline":
-		factory := sdk.NewTypedStepFactory(typeName, &contracts.TriggerPipelineConfig{}, &contracts.TriggerPipelineInput{}, typedTriggerPipeline(nil))
+		client, err := p.clientFromTypedConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		factory := sdk.NewTypedStepFactory(typeName, &contracts.TriggerPipelineConfig{}, &contracts.TriggerPipelineInput{}, typedTriggerPipeline(client))
 		return factory.CreateTypedStep(typeName, name, config)
 	case "step.gitlab_pipeline_status":
-		factory := sdk.NewTypedStepFactory(typeName, &contracts.PipelineStatusConfig{}, &contracts.PipelineStatusInput{}, typedPipelineStatus(nil))
+		client, err := p.clientFromTypedConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		factory := sdk.NewTypedStepFactory(typeName, &contracts.PipelineStatusConfig{}, &contracts.PipelineStatusInput{}, typedPipelineStatus(client))
 		return factory.CreateTypedStep(typeName, name, config)
 	case "step.gitlab_create_merge_request", "step.gitlab_create_mr":
-		factory := sdk.NewTypedStepFactory(typeName, &contracts.CreateMergeRequestConfig{}, &contracts.CreateMergeRequestInput{}, typedCreateMergeRequest(nil))
+		client, err := p.clientFromTypedConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		factory := sdk.NewTypedStepFactory(typeName, &contracts.CreateMergeRequestConfig{}, &contracts.CreateMergeRequestInput{}, typedCreateMergeRequest(client))
 		return factory.CreateTypedStep(typeName, name, config)
 	case "step.gitlab_mr_comment":
-		factory := sdk.NewTypedStepFactory(typeName, &contracts.MRCommentConfig{}, &contracts.MRCommentInput{}, typedMRComment(nil))
+		client, err := p.clientFromTypedConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		factory := sdk.NewTypedStepFactory(typeName, &contracts.MRCommentConfig{}, &contracts.MRCommentInput{}, typedMRComment(client))
 		return factory.CreateTypedStep(typeName, name, config)
 	case "step.gitlab_parse_webhook":
 		factory := sdk.NewTypedStepFactory(typeName, &contracts.ParseWebhookConfig{}, &contracts.ParseWebhookInput{}, typedParseWebhook())
@@ -155,6 +201,43 @@ func (p *gitlabPlugin) CreateTypedStep(typeName, name string, config *anypb.Any)
 	default:
 		return nil, fmt.Errorf("gitlab plugin: unknown step type %q", typeName)
 	}
+}
+
+func (p *gitlabPlugin) registerClient(module *gitlabClientModule) {
+	if module == nil {
+		return
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.clients[module.name] = module
+}
+
+func (p *gitlabPlugin) clientFromConfig(config map[string]any) (GitLabClient, error) {
+	name, _ := config["client"].(string)
+	if name == "" {
+		return nil, nil
+	}
+	p.mu.RLock()
+	module, ok := p.clients[name]
+	p.mu.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("gitlab client module %q not found", name)
+	}
+	if module.token == "mock" {
+		return &mockGitLabClient{}, nil
+	}
+	return module.NewHTTPClient(), nil
+}
+
+func (p *gitlabPlugin) clientFromTypedConfig(config *anypb.Any) (GitLabClient, error) {
+	if config == nil {
+		return nil, nil
+	}
+	msg, err := config.UnmarshalNew()
+	if err != nil {
+		return nil, err
+	}
+	return p.clientFromConfig(protoMessageToMap(msg))
 }
 
 // ContractRegistry returns strict protobuf descriptors for plugin boundaries.
